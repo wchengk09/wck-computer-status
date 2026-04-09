@@ -10,6 +10,12 @@ fi
 
 KEYSARRAY=()
 URLSARRAY=()
+IPSOURCE=""
+
+# First, fetch the IP address from the configured source
+echo "Fetching IP from https://wchengk09.netlify.app/domain/ip.txt"
+IPSOURCE=$(curl -s "https://wchengk09.netlify.app/domain/ip.txt" | tr -d '[:space:]')
+echo "  Got IP: $IPSOURCE"
 
 urlsConfig="./urls.cfg"
 echo "Reading $urlsConfig"
@@ -17,8 +23,14 @@ while read -r line
 do
   echo "  $line"
   IFS='=' read -ra TOKENS <<< "$line"
-  KEYSARRAY+=(${TOKENS[0]})
-  URLSARRAY+=(${TOKENS[1]})
+  key="${TOKENS[0]}"
+  # For WCK-COMPUTER, use dynamic IP; otherwise use configured URL
+  if [[ "$key" == "WCK-COMPUTER" ]]; then
+    URLSARRAY+=("http://${IPSOURCE}:5244")
+  else
+    URLSARRAY+=("${TOKENS[1]}")
+  fi
+  KEYSARRAY+=("$key")
 done < "$urlsConfig"
 
 echo "***********************"
